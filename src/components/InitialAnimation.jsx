@@ -245,7 +245,7 @@ const Cube = () => {
 	);
 };
 
-const InitialAnimation = ({ onComplete }) => {
+const InitialAnimation = ({ onComplete, isMobile }) => {
 	// Track scroll progress with local scrollYProgress
 	const { scrollYProgress } = useScroll();
 
@@ -260,6 +260,19 @@ const InitialAnimation = ({ onComplete }) => {
 
 		return () => unsubscribe();
 	}, [scrollYProgress, onComplete]);
+
+	const [showScrollHint, setShowScrollHint] = useState(true);
+
+	// Hide the scroll hint after 5 seconds
+	useEffect(() => {
+		if (isMobile) {
+			const timer = setTimeout(() => {
+				setShowScrollHint(false);
+			}, 5000);
+
+			return () => clearTimeout(timer);
+		}
+	}, [isMobile]);
 
 	// Transform scroll progress to animation values
 	const cubeOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
@@ -284,7 +297,7 @@ const InitialAnimation = ({ onComplete }) => {
 				style={{ zIndex: 10 }}
 			>
 				<div
-					className="animation-container"
+					className="animation-container px-4"
 					style={{
 						display: "flex",
 						flexDirection: "column",
@@ -328,13 +341,14 @@ const InitialAnimation = ({ onComplete }) => {
 							flexDirection: "column",
 							alignItems: "center",
 							justifyContent: "center",
-							gap: "2rem",
+							gap: isMobile ? "1rem" : "2rem",
+							padding: "0 1rem",
 						}}
 					>
 						<motion.h2
 							style={{
 								color: "white",
-								fontSize: "clamp(2rem, 6vw, 4rem)",
+								fontSize: "clamp(1.5rem, 6vw, 4rem)",
 								margin: 0,
 								marginBottom: "0.5rem",
 								textShadow: "0 0 10px rgba(255,255,255,0.3)",
@@ -354,11 +368,15 @@ const InitialAnimation = ({ onComplete }) => {
 								src={mePhoto}
 								alt="Luke"
 								style={{
-									width: "clamp(150px, 30vw, 300px)",
-									height: "clamp(150px, 30vw, 300px)",
+									width: isMobile
+										? "clamp(100px, 50vw, 200px)"
+										: "clamp(150px, 30vw, 300px)",
+									height: isMobile
+										? "clamp(100px, 50vw, 200px)"
+										: "clamp(150px, 30vw, 300px)",
 									borderRadius: "50%",
 									objectFit: "cover",
-									objectPosition: "0px 5%", // More extreme adjustment - further down and left
+									objectPosition: "0px 5%",
 									border: "4px solid white",
 									boxShadow: "0 0 20px rgba(255,255,255,0.3)",
 									margin: "0 auto",
@@ -381,12 +399,13 @@ const InitialAnimation = ({ onComplete }) => {
 							right: 0,
 							transform: "translateY(-50%)",
 							textAlign: "center",
+							padding: "0 1rem",
 						}}
 					>
 						<motion.h2
 							style={{
 								color: "white",
-								fontSize: "clamp(2rem, 8vw, 5rem)",
+								fontSize: "clamp(1.75rem, 8vw, 5rem)",
 								margin: 0,
 								textShadow: "0 0 10px rgba(255,255,255,0.3)",
 							}}
@@ -405,12 +424,13 @@ const InitialAnimation = ({ onComplete }) => {
 							right: 0,
 							transform: "translateY(-50%)",
 							textAlign: "center",
+							padding: "0 1rem",
 						}}
 					>
 						<motion.h2
 							style={{
 								color: "white",
-								fontSize: "clamp(2rem, 8vw, 5rem)",
+								fontSize: "clamp(1.75rem, 8vw, 5rem)",
 								margin: 0,
 								textShadow: "0 0 10px rgba(255,255,255,0.3)",
 							}}
@@ -431,9 +451,37 @@ const InitialAnimation = ({ onComplete }) => {
 				</div>
 			</div>
 
-			{/* Skip button */}
+			{/* Mobile scroll hint */}
+			{isMobile && showScrollHint && (
+				<motion.div
+					className="fixed bottom-16 left-0 right-0 flex justify-center items-center z-30"
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 0.5 }}
+					exit={{ opacity: 0 }}
+				>
+					<div className="bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-full text-black text-sm flex items-center">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							className="h-5 w-5 mr-2"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M19 14l-7 7m0 0l-7-7m7 7V3"
+							/>
+						</svg>
+						Scroll to continue
+					</div>
+				</motion.div>
+			)}
+
+			{/* Skip button - responsive size and position */}
 			<motion.button
-				className="fixed bottom-8 right-8 bg-white bg-opacity-20 text-black px-4 py-2 rounded-full z-20"
+				className="fixed bottom-4 right-4 md:bottom-8 md:right-8 bg-white bg-opacity-20 text-black px-3 py-1 md:px-4 md:py-2 rounded-full z-20 text-sm md:text-base"
 				onClick={() => onComplete && onComplete()}
 				whileHover={{ scale: 1.05 }}
 				whileTap={{ scale: 0.95 }}
