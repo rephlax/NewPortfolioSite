@@ -24,12 +24,14 @@ const BackgroundAnimation = ({ children }) => {
 				{stars.map((star, index) => (
 					<motion.div
 						key={index}
-						className="absolute rounded-full bg-white"
+						className="absolute rounded-full"
 						style={{
 							left: `${star.x}%`,
 							top: `${star.y}%`,
 							width: `${star.size}px`,
 							height: `${star.size}px`,
+							background:
+								"radial-gradient(circle, rgba(255,255,255,1) 30%, rgba(255,255,255,0.2) 60%, rgba(255,255,255,0.1) 90%)",
 						}}
 						animate={{
 							opacity: [0.3, 0.9, 0.3],
