@@ -1,8 +1,27 @@
-import React, { useState } from "react";
-import { motion, useTransform } from "motion/react";
+import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
 
 const HomeArea = ({ onNavigate }) => {
 	const [activeOption, setActiveOption] = useState(null);
+
+	// State to track screen size for responsive adjustments
+	const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+	// Check screen size on mount and when window resizes
+	useEffect(() => {
+		const checkScreenSize = () => {
+			setIsSmallScreen(window.innerWidth < 768);
+		};
+
+		// Initial check
+		checkScreenSize();
+
+		// Add resize listener
+		window.addEventListener("resize", checkScreenSize);
+
+		// Clean up
+		return () => window.removeEventListener("resize", checkScreenSize);
+	}, []);
 
 	const navOptions = [
 		{ id: "about", label: "About Me", angle: 0 },
@@ -26,7 +45,7 @@ const HomeArea = ({ onNavigate }) => {
 
 	return (
 		<motion.div
-			className="flex items-center justify-center h-screen relative"
+			className="flex items-center justify-center min-h-screen relative px-4 py-8 overflow-y-scroll overscroll-none h-screen"
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			exit={{ opacity: 0 }}
@@ -38,10 +57,11 @@ const HomeArea = ({ onNavigate }) => {
 				<motion.div
 					className="absolute rounded-full bg-white opacity-60"
 					style={{
-						width: "260px",
-						height: "260px",
-						left: "-30px",
-						top: "-30px",
+						// Responsive sizing for the glow
+						width: isSmallScreen ? "180px" : "260px",
+						height: isSmallScreen ? "180px" : "260px",
+						left: isSmallScreen ? "-20px" : "-30px",
+						top: isSmallScreen ? "-20px" : "-30px",
 						filter: "blur(30px)",
 						zIndex: 9,
 					}}
@@ -61,8 +81,9 @@ const HomeArea = ({ onNavigate }) => {
 					id="white-orb"
 					className="rounded-full z-10 relative"
 					style={{
-						width: "200px",
-						height: "200px",
+						// Responsive sizing for the orb
+						width: isSmallScreen ? "140px" : "200px",
+						height: isSmallScreen ? "140px" : "200px",
 						boxShadow: "0 0 30px 5px rgba(255, 255, 255, 0.3)",
 						background:
 							"radial-gradient(circle, rgba(255,255,255,1) 30%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.1) 90%)",
@@ -82,15 +103,25 @@ const HomeArea = ({ onNavigate }) => {
 					}}
 				/>
 			</div>
-			{/* Navigation options */}
+
+			{/* Navigation options - with responsive positioning */}
 			{navOptions.map((option) => (
 				<motion.div
 					key={option.id}
-					className="absolute cursor-pointer text-white text-xl font-bold"
+					className="absolute cursor-pointer text-white font-bold"
+					style={{
+						// Responsive text size
+						fontSize: isSmallScreen ? "1rem" : "1.25rem",
+					}}
 					initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
 					animate={{
-						x: Math.cos((option.angle * Math.PI) / 180) * 180,
-						y: Math.sin((option.angle * Math.PI) / 180) * 180,
+						// Responsive positioning - smaller radius on small screens
+						x:
+							Math.cos((option.angle * Math.PI) / 180) *
+							(isSmallScreen ? 120 : 180),
+						y:
+							Math.sin((option.angle * Math.PI) / 180) *
+							(isSmallScreen ? 120 : 180),
 						scale: 1,
 						opacity: 1,
 					}}
@@ -102,7 +133,7 @@ const HomeArea = ({ onNavigate }) => {
 					}}
 					onClick={() => handleNavClick(option.id)}
 				>
-					{option.label}
+					<div className="p-2 md:p-4 text-center">{option.label}</div>
 				</motion.div>
 			))}
 		</motion.div>
