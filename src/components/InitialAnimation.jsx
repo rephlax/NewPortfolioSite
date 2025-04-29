@@ -245,26 +245,42 @@ const Cube = () => {
 	);
 };
 
-const InitialAnimation = ({ globalScroll }) => {
-	const cubeOpacity = useTransform(globalScroll, [0, 0.2], [1, 0]);
+const InitialAnimation = ({ onComplete }) => {
+	// Track scroll progress with local scrollYProgress
+	const { scrollYProgress } = useScroll();
+
+	// Listen for scroll completion to trigger navigation
+	useEffect(() => {
+		const unsubscribe = scrollYProgress.on("change", (latest) => {
+			// When user scrolls to end (or close to it), trigger the completion
+			if (latest >= 0.95) {
+				onComplete && onComplete();
+			}
+		});
+
+		return () => unsubscribe();
+	}, [scrollYProgress, onComplete]);
+
+	// Transform scroll progress to animation values
+	const cubeOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 	const myNameIsOpacity = useTransform(
-		globalScroll,
+		scrollYProgress,
 		[0.25, 0.4, 0.45, 0.55],
 		[0, 1, 1, 0]
 	);
 	const niceMeetYouOpacity = useTransform(
-		globalScroll,
+		scrollYProgress,
 		[0.6, 0.7, 0.75, 0.85],
 		[0, 1, 1, 0]
 	);
-	const letsStartOpacity = useTransform(globalScroll, [0.9, 1.0], [0, 1]);
+	const letsStartOpacity = useTransform(scrollYProgress, [0.9, 1.0], [0, 1]);
 
 	return (
 		<>
 			<div id="scroll-container" style={{ height: "500vh" }}></div>
 
 			<div
-				className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-center bg-black"
+				className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-center"
 				style={{ zIndex: 10 }}
 			>
 				<div
@@ -414,6 +430,16 @@ const InitialAnimation = ({ globalScroll }) => {
 					</motion.div>
 				</div>
 			</div>
+
+			{/* Skip button */}
+			<motion.button
+				className="fixed bottom-8 right-8 bg-white bg-opacity-20 text-black px-4 py-2 rounded-full z-20"
+				onClick={() => onComplete && onComplete()}
+				whileHover={{ scale: 1.05 }}
+				whileTap={{ scale: 0.95 }}
+			>
+				Skip Intro
+			</motion.button>
 		</>
 	);
 };
