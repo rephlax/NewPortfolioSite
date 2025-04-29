@@ -1,20 +1,49 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./App.css";
-import { motion, useAnimate, useScroll, useTransform } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import InitialAnimation from "./components/InitialAnimation";
 import AboutMe from "./components/AboutMe";
+import HomeArea from "./components/HomeArea";
+import BackgroundAnimation from "./components/BackgroundAnimation";
 
 function App() {
-	const { scrollYProgress } = useScroll();
-	const globalScroll = useTransform(scrollYProgress, [0, 1], [0, 5]);
+	// State to track which section should be visible
+	const [currentSection, setCurrentSection] = useState("initial");
+
+	// Function to handle completion of initial animation
+	const handleIntroComplete = () => {
+		setCurrentSection("home");
+	};
+
+	const handleHomeSelection = (selectedSection) => {
+		setCurrentSection(selectedSection);
+	};
+
+	const navigateToHome = () => {
+		setCurrentSection("home");
+	};
 
 	return (
-		<>
-			<div className="bg-black" style={{ height: "500vh" }}>
-				<InitialAnimation globalScroll={globalScroll} />
-				<AboutMe globalScroll={globalScroll} />
+		<BackgroundAnimation>
+			<div>
+				<AnimatePresence mode="wait">
+					{/* Initial Animation Section */}
+					{currentSection === "initial" && (
+						<InitialAnimation key="initial" onComplete={handleIntroComplete} />
+					)}
+
+					{/* Home Section */}
+					{currentSection === "home" && (
+						<HomeArea key="home" onNavigate={handleHomeSelection} />
+					)}
+
+					{/* About Section */}
+					{currentSection === "about" && (
+						<AboutMe key="about" onBackToHome={navigateToHome} />
+					)}
+				</AnimatePresence>
 			</div>
-		</>
+		</BackgroundAnimation>
 	);
 }
 
