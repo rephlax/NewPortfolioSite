@@ -9,42 +9,69 @@ import {
 
 import mePhoto from "../assets/me.jpg";
 
-const keyword1 = "Experience";
-const scrollText = "Scroll to start!";
-const keyword2 = "Responsive";
-const keyword3 = "Accessibility";
-const keyword4 = "Performance";
-const keyword5 = "Animation";
+// Cube face configuration
+const CUBE_FACES = [
+	{
+		name: "front",
+		text: "Scroll to start!",
+		transform: (size) => `translateZ(${size / 2}px)`,
+	},
+	{
+		name: "back",
+		text: "Responsive",
+		transform: (size) => `rotateY(180deg) translateZ(${size / 2}px)`,
+	},
+	{
+		name: "right",
+		text: "Experience",
+		transform: (size) => `rotateY(90deg) translateZ(${size / 2}px)`,
+	},
+	{
+		name: "left",
+		text: "Accessibility",
+		transform: (size) => `rotateY(-90deg) translateZ(${size / 2}px)`,
+	},
+	{
+		name: "top",
+		text: "Performance",
+		transform: (size) => `rotateX(90deg) translateZ(${size / 2}px)`,
+	},
+	{
+		name: "bottom",
+		text: "Animation",
+		transform: (size) => `rotateX(-90deg) translateZ(${size / 2}px)`,
+	},
+];
 
+// Animated text component with glow effect
 const AnimatedText = ({ text }) => {
 	return (
-		<div className="flex flex-wrap items-center justify-center w-full max-w-full">
-			{Array.from(text).map((letter, index) => (
+		<div className="flex flex-wrap items-center justify-center w-full">
+			{text.split("").map((letter, index) => (
 				<motion.span
 					key={index}
+					className="inline-block font-bold"
+					style={{
+						marginRight: letter === " " ? "0.3em" : "0.05em",
+						fontSize: "clamp(1.2rem, 3vw, 2rem)",
+						color: "transparent",
+						background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+						backgroundClip: "text",
+						WebkitBackgroundClip: "text",
+						filter: "drop-shadow(0 0 20px rgba(102, 126, 234, 0.5))",
+					}}
 					animate={{
-						textShadow: [
-							"0 0 4px rgba(65,105,225,0.9), 0 0 8px rgba(65,105,225,0.7), 0 0 12px rgba(65,105,225,0.5)",
-							"0 0 4px rgba(138,43,226,0.9), 0 0 8px rgba(138,43,226,0.7), 0 0 12px rgba(138,43,226,0.5)",
-							"0 0 4px rgba(255,20,147,0.9), 0 0 8px rgba(255,20,147,0.7), 0 0 12px rgba(255,20,147,0.5)",
-							"0 0 4px rgba(138,43,226,0.9), 0 0 8px rgba(138,43,226,0.7), 0 0 12px rgba(138,43,226,0.5)",
-							"0 0 4px rgba(65,105,225,0.9), 0 0 8px rgba(65,105,225,0.7), 0 0 12px rgba(65,105,225,0.5)",
+						filter: [
+							"drop-shadow(0 0 20px rgba(102, 126, 234, 0.5))",
+							"drop-shadow(0 0 30px rgba(118, 75, 162, 0.8))",
+							"drop-shadow(0 0 20px rgba(102, 126, 234, 0.5))",
 						],
 					}}
 					transition={{
-						textShadow: {
-							duration: 4,
-							repeat: Infinity,
-							ease: "easeInOut",
-							delay: index * 0.1,
-						},
-					}}
-					style={{
-						display: "inline-block",
-						marginRight: letter === " " ? "0.3rem" : "0.05rem",
-						fontSize: "clamp(1rem, 4vw, 2rem)",
-						fontWeight: "bold",
-						color: "black",
+						duration: 2,
+						repeat: Infinity,
+						delay: index * 0.05,
+						ease: "easeInOut",
 					}}
 				>
 					{letter}
@@ -54,436 +81,304 @@ const AnimatedText = ({ text }) => {
 	);
 };
 
+// Enhanced 3D cube component
 const Cube = () => {
 	const time = useTime();
-	const [size, setSize] = useState(300);
-	const [halfSize, setHalfSize] = useState(150);
+	const [cubeSize, setCubeSize] = useState(300);
 
+	// Responsive sizing
 	useEffect(() => {
-		const calculateSize = () => {
-			const baseSize = 300;
-			let newSize = baseSize;
-
-			if (window.innerWidth < 768) {
-				newSize = Math.min(window.innerWidth * 0.5, baseSize);
-			}
-
-			setSize(newSize);
-			setHalfSize(newSize / 2);
+		const updateSize = () => {
+			const vw = Math.min(window.innerWidth, window.innerHeight);
+			setCubeSize(Math.min(vw * 0.4, 300));
 		};
-
-		calculateSize();
-
-		window.addEventListener("resize", calculateSize);
-
-		return () => window.removeEventListener("resize", calculateSize);
+		updateSize();
+		window.addEventListener("resize", updateSize);
+		return () => window.removeEventListener("resize", updateSize);
 	}, []);
 
-	const secRotation = useTransform(time, (t) => {
-		const seconds = (t / 10000) * 6;
-		return seconds * 6;
-	});
-
-	const fastRotation = useTransform(time, (t) => {
-		const minutes = t / 5000;
-		return minutes * 6;
-	});
-
-	const fastestRotation = useTransform(time, (t) => {
-		const hours = t / 2500;
-		return hours * 30;
-	});
-
-	const smoothSec = useSpring(secRotation, { stiffness: 100, damping: 20 });
-	const smoothMin = useSpring(fastRotation, { stiffness: 100, damping: 20 });
-	const smoothHour = useSpring(fastestRotation, {
-		stiffness: 100,
-		damping: 20,
-	});
+	// Smooth rotation animations
+	const rotateX = useSpring(
+		useTransform(time, (t) => (t / 10000) * 360),
+		{
+			stiffness: 50,
+			damping: 20,
+		}
+	);
+	const rotateY = useSpring(
+		useTransform(time, (t) => (t / 8000) * 360),
+		{
+			stiffness: 50,
+			damping: 20,
+		}
+	);
+	const rotateZ = useSpring(
+		useTransform(time, (t) => (t / 12000) * 360),
+		{
+			stiffness: 50,
+			damping: 20,
+		}
+	);
 
 	return (
-		<div className="scene" style={{ perspective: "800px" }}>
+		<div className="relative" style={{ perspective: "1000px" }}>
+			{/* Ambient glow */}
 			<motion.div
-				className="cube"
+				className="absolute rounded-full"
 				style={{
-					position: "relative",
-					width: `${size}px`,
-					height: `${size}px`,
+					width: cubeSize * 2,
+					height: cubeSize * 2,
+					left: "50%",
+					top: "50%",
+					transform: "translate(-50%, -50%)",
+					background:
+						"radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%)",
+					filter: "blur(40px)",
+				}}
+				animate={{
+					scale: [1, 1.2, 1],
+					opacity: [0.5, 0.8, 0.5],
+				}}
+				transition={{
+					duration: 4,
+					repeat: Infinity,
+					ease: "easeInOut",
+				}}
+			/>
+
+			<motion.div
+				className="relative"
+				style={{
+					width: cubeSize,
+					height: cubeSize,
 					transformStyle: "preserve-3d",
-					rotateX: smoothSec,
-					rotateY: smoothMin,
-					rotateZ: smoothHour,
+					rotateX,
+					rotateY,
+					rotateZ,
 				}}
 			>
-				{/* Front Face */}
-				<motion.div
-					className="face front"
-					style={{
-						position: "absolute",
-						width: `${size}px`,
-						height: `${size}px`,
-						background: "#ffffff",
-						border: "1px solid #000000",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						padding: "20px",
-						backfaceVisibility: "hidden",
-						transformStyle: "preserve-3d",
-						transform: `translateZ(${halfSize}px)`,
-					}}
-				>
-					<AnimatedText text={scrollText} />
-				</motion.div>
-
-				{/* Back Face */}
-				<motion.div
-					className="face back"
-					style={{
-						position: "absolute",
-						width: `${size}px`,
-						height: `${size}px`,
-						background: "#ffffff",
-						border: "1px solid #000000",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						padding: "20px",
-						backfaceVisibility: "hidden",
-						transformStyle: "preserve-3d",
-						transform: `rotateY(180deg) translateZ(${halfSize}px)`,
-					}}
-				>
-					<AnimatedText text={keyword2} />
-				</motion.div>
-
-				{/* Right Face */}
-				<motion.div
-					className="face right"
-					style={{
-						position: "absolute",
-						width: `${size}px`,
-						height: `${size}px`,
-						background: "#ffffff",
-						border: "1px solid #000000",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						padding: "20px",
-						backfaceVisibility: "hidden",
-						transformStyle: "preserve-3d",
-						transform: `rotateY(90deg) translateZ(${halfSize}px)`,
-					}}
-				>
-					<AnimatedText text={keyword1} />
-				</motion.div>
-
-				{/* Left Face */}
-				<motion.div
-					className="face left"
-					style={{
-						position: "absolute",
-						width: `${size}px`,
-						height: `${size}px`,
-						background: "#ffffff",
-						border: "1px solid #000000",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						padding: "20px",
-						backfaceVisibility: "hidden",
-						transformStyle: "preserve-3d",
-						transform: `rotateY(-90deg) translateZ(${halfSize}px)`,
-					}}
-				>
-					<AnimatedText text={keyword3} />
-				</motion.div>
-
-				{/* Top Face */}
-				<motion.div
-					className="face top"
-					style={{
-						position: "absolute",
-						width: `${size}px`,
-						height: `${size}px`,
-						background: "#ffffff",
-						border: "1px solid #000000",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						padding: "20px",
-						backfaceVisibility: "hidden",
-						transformStyle: "preserve-3d",
-						transform: `rotateX(90deg) translateZ(${halfSize}px)`,
-					}}
-				>
-					<AnimatedText text={keyword4} />
-				</motion.div>
-
-				{/* Bottom Face */}
-				<motion.div
-					className="face bottom"
-					style={{
-						position: "absolute",
-						width: `${size}px`,
-						height: `${size}px`,
-						background: "#ffffff",
-						border: "1px solid #000000",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						padding: "20px",
-						backfaceVisibility: "hidden",
-						transformStyle: "preserve-3d",
-						transform: `rotateX(-90deg) translateZ(${halfSize}px)`,
-					}}
-				>
-					<AnimatedText text={keyword5} />
-				</motion.div>
+				{CUBE_FACES.map((face) => (
+					<motion.div
+						key={face.name}
+						className="absolute flex items-center justify-center p-5"
+						style={{
+							width: cubeSize,
+							height: cubeSize,
+							transform: face.transform(cubeSize),
+							transformStyle: "preserve-3d",
+							backfaceVisibility: "hidden",
+							background: "rgba(255, 255, 255, 0.1)",
+							backdropFilter: "blur(10px)",
+							border: "1px solid rgba(255, 255, 255, 0.2)",
+							boxShadow: "inset 0 0 30px rgba(102, 126, 234, 0.2)",
+						}}
+						whileHover={{
+							background: "rgba(255, 255, 255, 0.15)",
+							boxShadow: "inset 0 0 40px rgba(118, 75, 162, 0.3)",
+						}}
+					>
+						<AnimatedText text={face.text} />
+					</motion.div>
+				))}
 			</motion.div>
 		</div>
 	);
 };
 
+// Section component for cleaner code
+const ScrollSection = ({ opacity, children, className = "" }) => (
+	<motion.div
+		className={`absolute inset-0 flex items-center justify-center ${className}`}
+		style={{ opacity }}
+	>
+		{children}
+	</motion.div>
+);
+
+// Main component
 const InitialAnimation = ({ onComplete, isMobile }) => {
-	// Track scroll progress with local scrollYProgress
 	const { scrollYProgress } = useScroll();
-
-	// Listen for scroll completion to trigger navigation
-	useEffect(() => {
-		const unsubscribe = scrollYProgress.on("change", (latest) => {
-			// When user scrolls to end (or close to it), trigger the completion
-			if (latest >= 0.95) {
-				onComplete && onComplete();
-			}
-		});
-
-		return () => unsubscribe();
-	}, [scrollYProgress, onComplete]);
-
 	const [showScrollHint, setShowScrollHint] = useState(true);
 
-	// Hide the scroll hint after 5 seconds
-	useEffect(() => {
-		if (isMobile) {
-			const timer = setTimeout(() => {
-				setShowScrollHint(false);
-			}, 5000);
-
-			return () => clearTimeout(timer);
-		}
-	}, [isMobile]);
-
-	// Transform scroll progress to animation values
+	// Scroll progress transforms
 	const cubeOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-	const myNameIsOpacity = useTransform(
+	const nameOpacity = useTransform(
 		scrollYProgress,
 		[0.25, 0.4, 0.45, 0.55],
 		[0, 1, 1, 0]
 	);
-	const niceMeetYouOpacity = useTransform(
+	const greetingOpacity = useTransform(
 		scrollYProgress,
 		[0.6, 0.7, 0.75, 0.85],
 		[0, 1, 1, 0]
 	);
-	const letsStartOpacity = useTransform(scrollYProgress, [0.9, 1.0], [0, 1]);
+	const startOpacity = useTransform(scrollYProgress, [0.9, 1.0], [0, 1]);
+
+	// Handle scroll completion
+	useEffect(() => {
+		const unsubscribe = scrollYProgress.on("change", (value) => {
+			if (value >= 0.95) onComplete?.();
+		});
+		return unsubscribe;
+	}, [scrollYProgress, onComplete]);
+
+	// Hide scroll hint after delay
+	useEffect(() => {
+		if (isMobile) {
+			const timer = setTimeout(() => setShowScrollHint(false), 5000);
+			return () => clearTimeout(timer);
+		}
+	}, [isMobile]);
 
 	return (
 		<>
-			<div id="scroll-container" style={{ height: "500vh" }}></div>
+			{/* Scroll container */}
+			<div style={{ height: "500vh" }} />
 
-			<div
-				className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-center"
-				style={{ zIndex: 10 }}
-			>
-				<div
-					className="animation-container px-4"
-					style={{
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-						position: "relative",
-						height: "100vh",
-						width: "100%",
-					}}
-				>
-					{/* Initial cube animation */}
-					<motion.div
-						className="initial-section"
-						style={{
-							opacity: cubeOpacity,
-							position: "absolute",
-							top: 0,
-							left: 0,
-							right: 0,
-							bottom: 0,
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
+			{/* Fixed animation container */}
+			<div className="fixed inset-0 flex items-center justify-center z-10">
+				<div className="relative w-full h-full">
+					{/* Cube section */}
+					<ScrollSection opacity={cubeOpacity}>
 						<Cube />
-					</motion.div>
+					</ScrollSection>
 
-					{/* My name is Luke section */}
-					<motion.div
-						style={{
-							opacity: myNameIsOpacity,
-							position: "absolute",
-							top: "50%",
-							left: 0,
-							right: 0,
-							transform: "translateY(-50%)",
-							textAlign: "center",
-							width: "100%",
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-							justifyContent: "center",
-							gap: isMobile ? "1rem" : "2rem",
-							padding: "0 1rem",
-						}}
-					>
-						<motion.h2
-							style={{
-								color: "white",
-								fontSize: "clamp(1.5rem, 6vw, 4rem)",
-								margin: 0,
-								marginBottom: "0.5rem",
-								textShadow: "0 0 10px rgba(255,255,255,0.3)",
-							}}
-						>
-							My name is Luke...
-						</motion.h2>
-						<div
-							style={{
-								width: "100%",
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-							}}
-						>
-							<motion.img
-								src={mePhoto}
-								alt="Luke"
+					{/* Name section */}
+					<ScrollSection opacity={nameOpacity}>
+						<div className="text-center px-4 space-y-6">
+							<motion.h2
+								className="text-white m-0"
+								style={{
+									fontSize: "clamp(2rem, 6vw, 4rem)",
+									textShadow: "0 0 30px rgba(255,255,255,0.5)",
+								}}
+								initial={{ y: 20, opacity: 0 }}
+								animate={{ y: 0, opacity: 1 }}
+								transition={{ duration: 0.6 }}
+							>
+								My name is Luke...
+							</motion.h2>
+							<motion.div
+								className="relative mx-auto"
 								style={{
 									width: isMobile
-										? "clamp(100px, 50vw, 200px)"
-										: "clamp(150px, 30vw, 300px)",
+										? "clamp(120px, 40vw, 200px)"
+										: "clamp(150px, 25vw, 250px)",
 									height: isMobile
-										? "clamp(100px, 50vw, 200px)"
-										: "clamp(150px, 30vw, 300px)",
-									borderRadius: "50%",
-									objectFit: "cover",
-									objectPosition: "0px 5%",
-									border: "4px solid white",
-									boxShadow: "0 0 20px rgba(255,255,255,0.3)",
-									margin: "0 auto",
-									display: "block",
+										? "clamp(120px, 40vw, 200px)"
+										: "clamp(150px, 25vw, 250px)",
 								}}
 								initial={{ scale: 0.8, opacity: 0 }}
 								animate={{ scale: 1, opacity: 1 }}
-								transition={{ duration: 0.5 }}
-							/>
+								transition={{ duration: 0.6, delay: 0.2 }}
+							>
+								<img
+									src={mePhoto}
+									alt="Luke"
+									className="w-full h-full rounded-full object-cover border-4 border-white"
+									style={{
+										objectPosition: "center 20%",
+										boxShadow: "0 0 40px rgba(255,255,255,0.4)",
+									}}
+								/>
+								<motion.div
+									className="absolute inset-0 rounded-full"
+									style={{
+										background:
+											"radial-gradient(circle, transparent 60%, rgba(102, 126, 234, 0.2) 100%)",
+									}}
+									animate={{
+										scale: [1, 1.1, 1],
+										opacity: [0.5, 0.8, 0.5],
+									}}
+									transition={{
+										duration: 3,
+										repeat: Infinity,
+										ease: "easeInOut",
+									}}
+								/>
+							</motion.div>
 						</div>
-					</motion.div>
+					</ScrollSection>
 
-					{/* Nice to meet you section */}
-					<motion.div
-						style={{
-							opacity: niceMeetYouOpacity,
-							position: "absolute",
-							top: "50%",
-							left: 0,
-							right: 0,
-							transform: "translateY(-50%)",
-							textAlign: "center",
-							padding: "0 1rem",
-						}}
-					>
+					{/* Greeting section */}
+					<ScrollSection opacity={greetingOpacity}>
 						<motion.h2
+							className="text-white text-center px-4 m-0"
 							style={{
-								color: "white",
-								fontSize: "clamp(1.75rem, 8vw, 5rem)",
-								margin: 0,
-								textShadow: "0 0 10px rgba(255,255,255,0.3)",
+								fontSize: "clamp(2.5rem, 8vw, 5rem)",
+								textShadow: "0 0 40px rgba(255,255,255,0.6)",
 							}}
+							initial={{ scale: 0.9 }}
+							animate={{ scale: 1 }}
+							transition={{ duration: 0.5 }}
 						>
 							Nice to meet you!
 						</motion.h2>
-					</motion.div>
+					</ScrollSection>
 
-					{/* Let's get started section */}
-					<motion.div
-						style={{
-							opacity: letsStartOpacity,
-							position: "absolute",
-							top: "50%",
-							left: 0,
-							right: 0,
-							transform: "translateY(-50%)",
-							textAlign: "center",
-							padding: "0 1rem",
-						}}
-					>
+					{/* Start section */}
+					<ScrollSection opacity={startOpacity}>
 						<motion.h2
+							className="text-white text-center px-4 m-0"
 							style={{
-								color: "white",
-								fontSize: "clamp(1.75rem, 8vw, 5rem)",
-								margin: 0,
-								textShadow: "0 0 10px rgba(255,255,255,0.3)",
+								fontSize: "clamp(2.5rem, 8vw, 5rem)",
+								textShadow: "0 0 40px rgba(255,255,255,0.6)",
 							}}
 							animate={{
 								scale: [1, 1.05, 1],
+								textShadow: [
+									"0 0 40px rgba(255,255,255,0.6)",
+									"0 0 60px rgba(102, 126, 234, 0.8)",
+									"0 0 40px rgba(255,255,255,0.6)",
+								],
 							}}
 							transition={{
-								scale: {
-									duration: 2,
-									repeat: Infinity,
-									ease: "easeInOut",
-								},
+								duration: 2,
+								repeat: Infinity,
+								ease: "easeInOut",
 							}}
 						>
 							Let's get started!
 						</motion.h2>
-					</motion.div>
+					</ScrollSection>
 				</div>
 			</div>
 
 			{/* Mobile scroll hint */}
 			{isMobile && showScrollHint && (
 				<motion.div
-					className="fixed bottom-16 left-0 right-0 flex justify-center items-center z-30"
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 0.5 }}
-					exit={{ opacity: 0 }}
+					className="fixed bottom-16 left-1/2 -translate-x-1/2 z-30"
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 0.8, y: 0 }}
+					exit={{ opacity: 0, y: 20 }}
 				>
-					<div className="bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-full text-black text-sm flex items-center">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							className="h-5 w-5 mr-2"
-							fill="none"
+					<div className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-full text-white flex items-center space-x-2">
+						<motion.svg
+							width="20"
+							height="20"
 							viewBox="0 0 24 24"
+							fill="none"
 							stroke="currentColor"
+							strokeWidth="2"
+							animate={{ y: [0, 5, 0] }}
+							transition={{ duration: 1.5, repeat: Infinity }}
 						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M19 14l-7 7m0 0l-7-7m7 7V3"
-							/>
-						</svg>
-						Scroll to continue
+							<path d="M12 5v14M19 12l-7 7-7-7" />
+						</motion.svg>
+						<span className="text-sm font-medium">Scroll to continue</span>
 					</div>
 				</motion.div>
 			)}
 
-			{/* Skip button - responsive size and position */}
+			{/* Skip button */}
 			<motion.button
-				className="fixed bottom-4 right-4 md:bottom-8 md:right-8 bg-white bg-opacity-20 text-black px-3 py-1 md:px-4 md:py-2 rounded-full z-20 text-sm md:text-base"
-				onClick={() => onComplete && onComplete()}
-				whileHover={{ scale: 1.05 }}
+				className="fixed bottom-8 right-8 bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-full z-20 font-medium"
+				onClick={onComplete}
+				whileHover={{
+					scale: 1.05,
+					backgroundColor: "rgba(255, 255, 255, 0.2)",
+				}}
 				whileTap={{ scale: 0.95 }}
 			>
 				Skip Intro
